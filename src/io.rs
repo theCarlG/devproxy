@@ -70,3 +70,42 @@ where
         }
     }
 }
+
+#[cfg(test)]
+mod test {
+    use std::iter::repeat_with;
+    use std::time::{Duration, SystemTime};
+
+    use crate::error;
+    use crate::io::{random_fail, throttled_copy};
+
+    use tokio::io::{BufReader, BufWriter};
+
+    #[tokio::test]
+    async fn test_random_fail() {
+        let result = random_fail(1.0)
+            .await
+            .map_err(|err| err.downcast::<error::Error>().unwrap());
+
+        assert!(result.is_err());
+        assert_eq!(result, Err(error::Error::ExpectedTransferFail));
+    }
+
+    #[tokio::test]
+    async fn test_throttled_copy() {
+        let mut rng = fastrand::Rng::new();
+
+        let bytes: Vec<u8> = repeat_with(|| rng.u8(..)).take(10_000).collect();
+        let mut reader = BufReader::new(bytes.as_slice());
+        let mut writer = BufWriter::new(Vec::new());
+
+        let start = SystemTime::now();
+        let result = throttled_copy(&mut reader, &mut writer, 10000).await;
+        let end = SystemTime::now();
+
+        let duration = end.duration_since(start).unwrap();
+
+        assert!(result.is_ok());
+        assert!(duration >= Duration::from_secs(1));
+    }
+}
