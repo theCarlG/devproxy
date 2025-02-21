@@ -1,6 +1,6 @@
 use std::env;
 use std::time::SystemTime;
-use time::{format_description::well_known::Rfc3339, OffsetDateTime};
+use time::{OffsetDateTime, format_description::well_known::Rfc3339};
 
 fn main() {
     env::var("GIT_SHA").map_or_else(

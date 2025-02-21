@@ -6,7 +6,7 @@ use tokio::{
     net::{TcpListener, TcpStream},
     time,
 };
-use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Layer};
+use tracing_subscriber::{EnvFilter, Layer, layer::SubscriberExt, util::SubscriberInitExt};
 
 use std::{env, net::SocketAddrV4, time::Duration};
 
@@ -47,7 +47,10 @@ async fn main() -> anyhow::Result<()> {
 
     if env::var("RUST_LOG").is_err() {
         #[cfg(debug_assertions)]
-        env::set_var("RUST_LOG", "devproxy=debug");
+        #[allow(unsafe_code)]
+        unsafe {
+            env::set_var("RUST_LOG", "devproxy=debug");
+        };
 
         #[cfg(not(debug_assertions))]
         env::set_var("RUST_LOG", "devproxy=info");
